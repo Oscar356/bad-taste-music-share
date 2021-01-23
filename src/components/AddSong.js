@@ -44,7 +44,7 @@ const DEFAULT_SONG = {
 
 function AddSong() {
   const classes = useStyles();
-  const [addSong] = useMutation(ADD_SONG);
+  const [addSong, { error }] = useMutation(ADD_SONG);
   const [url, setUrl] = React.useState("");
   const [playable, setPlayable] = React.useState(false);
   const [dialog, setDialog] = React.useState(false);
@@ -87,7 +87,7 @@ function AddSong() {
         variables: {
           url: url.length > 0 ? url : null,
           thumbnail: thumbnail.length > 0 ? thumbnail : null,
-          duration: duration.length > 0 ? duration : null,
+          duration: duration > 0 ? duration : null,
           title: title.length > 0 ? title : null,
           artist: artist.length > 0 ? artist : null,
         },
@@ -127,7 +127,12 @@ function AddSong() {
     });
   }
 
+  function handleError(field) {
+    return error?.graphQLErrors[0]?.extensions?.path.includes(field);
+  };
+
   const { thumbnail, title, artist } = song;
+  // console.dir("this is the error " + error);
   return (
     <div className={classes.container}>
       <Dialog
@@ -149,6 +154,8 @@ function AddSong() {
             name="title"
             label="Title"
             fullWidth
+            error={handleError('title')} 
+            helperText= {handleError('title') && 'Fill out field'}
           />
           <TextField
             value={artist}
@@ -157,6 +164,8 @@ function AddSong() {
             name="artist"
             label="Artist"
             fullWidth
+            error={handleError('artist')} 
+            helperText= {handleError('artist') && 'Fill out field'}
           />
           <TextField
             value={thumbnail}
@@ -165,6 +174,8 @@ function AddSong() {
             name="thumbnail"
             label="Thumbnail"
             fullWidth
+            error={handleError('thumbnail')} 
+            helperText= {handleError('thumbnail') && 'Fill out field'}
           />
         </DialogContent>
         <DialogActions>
