@@ -1,4 +1,4 @@
-import { useSubscription } from "@apollo/react-hooks";
+import { useMutation, useSubscription } from "@apollo/react-hooks";
 import {
   Card,
   CardActions,
@@ -12,6 +12,7 @@ import {
 import { PlayArrow, Save, Pause } from "@material-ui/icons";
 import React from "react";
 import { SongContext } from "../App";
+import { ADD_OR_REMOVE_FROM_QEUEUE } from "../graphql/mutations";
 import { GET_SONGS } from "../graphql/subscriptions";
 
 function SongList() {
@@ -71,6 +72,11 @@ const useStyles = makeStyles((theme) => ({
 function Song({ song }) {
   const { id } = song;
   const classes = useStyles();
+  const [addOrRemoveFromQueue] = useMutation(ADD_OR_REMOVE_FROM_QEUEUE, {
+    onCompleted: data => {
+      localStorage.setItem("queue", JSON.stringify(data.addOrRemoveFromQueue));
+    }
+  });
   const { state, dispatch } = React.useContext(SongContext);
   const [currentSongPlaying, setCurrentSongPlaying] = React.useState(false);
   const { title, artist, thumbnail } = song;
@@ -80,10 +86,15 @@ function Song({ song }) {
     setCurrentSongPlaying(isSongPlaying);
   }, [id, state.song.id, state.isPlaying]);
 
-
   function handleTogglePlay() {
-    dispatch({ type: "SET_SONG", payload: { song }})
-    dispatch(state.isPlaying ? { type: "PAUSE_SONG"} : { type: "PLAY_SONG"});
+    dispatch({ type: "SET_SONG", payload: { song } });
+    dispatch(state.isPlaying ? { type: "PAUSE_SONG" } : { type: "PLAY_SONG" });
+  }
+
+  function handleAddOrRemoveFromQueue() {
+    addOrRemoveFromQueue({
+      variables: { input: { ...song, __typename: "Song" } },
+    });
   }
 
   return (
@@ -103,7 +114,11 @@ function Song({ song }) {
             <IconButton onClick={handleTogglePlay} size="small" color="primary">
               {currentSongPlaying ? <Pause /> : <PlayArrow />}
             </IconButton>
-            <IconButton size="small" color="secondary">
+            <IconButton
+              onClick={handleAddOrRemoveFromQueue}
+              size="small"
+              color="secondary"
+            >
               <Save color="secondary" />
             </IconButton>
           </CardActions>
